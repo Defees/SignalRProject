@@ -2,15 +2,11 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>Metanit.com</title>
 </head>
 <body>
     <div>
-        Введите логин:<br />
-        <input id="userName" type="text" /><br /><br />
-        Введите сообщение:<br />
-        <input type="text" id="message" /><br /><br />
-        <input type="button" id="sendBtn" value="Отправить" disabled="disabled" />
+        <input type="text" id="message" />
+        <input type="button" id="sendBtn" value="Отправить" />
     </div>
     <div id="chatroom"></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
@@ -20,20 +16,19 @@
             .build();
 
         document.getElementById("sendBtn").addEventListener("click", function () {
-            const userName = document.getElementById("userName").value;   // получаем введенное имя
             const message = document.getElementById("message").value;
 
-            hubConnection.invoke("Send", message, userName) // отправка данных серверу
+            hubConnection.invoke("Send", message) // отправка данных серверу
                 .catch(function (err) {
                     return console.error(err.toString());
                 });
         });
         // получение данных с сервера
-        hubConnection.on("Receive", function (message, userName) {
+        hubConnection.on("Receive", function (message, connectionId) {
 
-            // создаем элемент <b> для имени пользователя
+            // создаем элемент <b> для connectionId
             const userNameElem = document.createElement("b");
-            userNameElem.textContent = `${userName}: `;
+            userNameElem.textContent = `${connectionId}: `;
 
             // создает элемент <p> для сообщения пользователя
             const elem = document.createElement("p");
@@ -42,6 +37,17 @@
 
             // добавляем новый элемент в самое начало
             // для этого сначала получаем первый элемент
+            const firstElem = document.getElementById("chatroom").firstChild;
+            document.getElementById("chatroom").insertBefore(elem, firstElem);
+        });
+
+        hubConnection.on("Notify", function (message) {
+
+            // добавляет элемент для диагностического сообщения
+            const notifyElem = document.createElement("b");
+            notifyElem.textContent = message;
+            const elem = document.createElement("p");
+            elem.appendChild(notifyElem);
             const firstElem = document.getElementById("chatroom").firstChild;
             document.getElementById("chatroom").insertBefore(elem, firstElem);
         });
